@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>edulog hub</title>
+
+<link rel="icon" type="image/x-icon" href="https://edulog.ch/favicon.ico">
+
+<style>
+body {
+  font-family: "Segoe UI", Arial;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 30px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h2 {
+  color: #002654;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 750;
+  letter-spacing: 0.3px;
+}
+
+#status {
+  font-size: 14px;
+  color: #555;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #e9eef5;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #dbe6f5;
+}
+
+/* GROUPS */
+.group {
+  margin-bottom: 30px;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #444;
+}
+
+.group-header button {
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+}
+
+.group-header button:hover {
+  color: red;
+}
+
+.group-box {
+  background: white;
+  border-radius: 14px;
+  padding: 15px;
+  min-height: 160px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.group-box.dragover {
+  outline: 2px dashed #002654;
+}
+
+/* TILE */
+.tile {
+  width: 140px;
+  height: 120px;
+  background: #fff;
+  border-radius: 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 10px;
+  cursor: grab;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  font-size: 13px;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 6px;
+}
+
+.delete {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #999;
+}
+
+.delete:hover {
+  color: red;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>
+    <img src="https://edulog.ch/favicon.ico" style="width:26px;height:26px;">
+    edulog hub
+  </h2>
+  <div id="status">Login Status: geprüft</div>
+</header>
+
+<div class="toolbar">
+  <button onclick="addGroup()">+ Gruppe</button>
+  <button onclick="addTile()">+ Kachel</button>
+  <button onclick="resetHub()">↺ Reset</button>
+</div>
+
+<div id="app"></div>
+
+<script>
+const KEY = "tiles";
+const GROUPS_KEY = "groups";
+
+/* DEFAULT CONFIG */
+const DEFAULT_GROUPS = ["Schule","Microsoft","Admin","Tools"];
+
+const DEFAULT_TILES = [
+  { id:"1", name:"Outlook", url:"https://outlook.office.com", group:"Microsoft" },
+  { id:"2", name:"Teams", url:"https://teams.microsoft.com", group:"Microsoft" },
+  { id:"3", name:"Edulog Lehrmittel", url:"https://digital.lmvz.ch", group:"Schule" }
+];
+
+/* STORAGE */
+function loadTiles(){ return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+function saveTiles(t){ localStorage.setItem(KEY, JSON.stringify(t)); }
+
+function loadGroups(){ return JSON.parse(localStorage.getItem(GROUPS_KEY) || "[]"); }
+function saveGroups(g){ localStorage.setItem(GROUPS_KEY, JSON.stringify(g)); }
+
+/* INIT */
+function initDefaults(){
+  if(!localStorage.getItem(GROUPS_KEY)) saveGroups(DEFAULT_GROUPS);
+  if(!localStorage.getItem(KEY)) saveTiles(DEFAULT_TILES);
+}
+
+/* FAVICON */
+function favicon(url){
+  try{
+    const u = new URL(url);
+    return [
+      `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`,
+      `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+      `${u.origin}/favicon.ico`
+    ];
+  }catch{
+    return ["https://via.placeholder.com/32"];
+  }
+}
+
+/* RENDER */
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  const groups = loadGroups();
+  const tiles = loadTiles();
+
+  groups.forEach(group=>{
+    const section = document.createElement("div");
+    section.className="group";
+
+    const header = document.createElement("div");
+    header.className="group-header";
+
+    const title = document.createElement("div");
+    title.innerText = group;
+
+    const del = document.createElement("button");
+    del.innerText = "🗑";
+    del.onclick = ()=> deleteGroup(group);
+
+    header.appendChild(title);
+    header.appendChild(del);
+
+    const box = document.createElement("div");
+    box.className="group-box";
+
+    box.ondragover = e=>{
+      e.preventDefault();
+      box.classList.add("dragover");
+    };
+
+    box.ondragleave = ()=> box.classList.remove("dragover");
+
+    box.ondrop = e=>{
+      const id = e.dataTransfer.getData("id");
+      moveTile(id, group);
+      box.classList.remove("dragover");
+    };
+
+    tiles.filter(t=>t.group===group)
+         .forEach(t=>box.appendChild(createTile(t)));
+
+    section.appendChild(header);
+    section.appendChild(box);
+    app.appendChild(section);
+  });
+}
+
+/* TILE */
+function createTile(t){
+  const div=document.createElement("div");
+  div.className="tile";
+  div.draggable=true;
+
+  const img=document.createElement("img");
+  img.className="icon";
+
+  const sources=favicon(t.url);
+  let i=0;
+  img.src=sources[i];
+  img.onerror=()=>{ if(++i<sources.length) img.src=sources[i]; };
+
+  const del=document.createElement("div");
+  del.className="delete";
+  del.innerText="🗑";
+  del.onclick=e=>{
+    e.stopPropagation();
+    removeTile(t.id);
+  };
+
+  div.appendChild(del);
+  div.appendChild(img);
+  div.appendChild(document.createTextNode(t.name));
+
+  div.onclick=()=>window.location.href=t.url;
+
+  div.ondragstart=e=>{
+    e.dataTransfer.setData("id",t.id);
+  };
+
+  return div;
+}
+
+/* ACTIONS FIXED */
+
+/* 🔥 FIX: robust group deletion */
+function deleteGroup(group){
+  if(!confirm(`Gruppe "${group}" löschen?`)) return;
+
+  const groups = loadGroups().filter(g=>g!==group);
+  saveGroups(groups);
+
+  const fallback = DEFAULT_GROUPS[0] || "Unassigned";
+
+  const tiles = loadTiles().map(t=>{
+    if(t.group===group){
+      return {...t, group:fallback};
+    }
+    return t;
+  });
+
+  saveTiles(tiles);
+  render();
+}
+
+/* other actions */
+function addGroup(){
+  const name=prompt("Gruppenname:");
+  if(!name) return;
+  const g=loadGroups(); g.push(name); saveGroups(g); render();
+}
+
+function addTile(){
+  const name=prompt("Name:");
+  const url=prompt("URL:");
+  const groups=loadGroups();
+  const group=prompt("Gruppe:",groups[0]);
+
+  const tiles=loadTiles();
+  tiles.push({
+    id:Date.now().toString(),
+    name,url,
+    group:group||groups[0]
+  });
+
+  saveTiles(tiles);
+  render();
+}
+
+function moveTile(id,group){
+  const tiles=loadTiles();
+  const t=tiles.find(x=>x.id===id);
+  if(!t) return;
+  t.group=group;
+  saveTiles(tiles);
+  render();
+}
+
+function removeTile(id){
+  saveTiles(loadTiles().filter(t=>t.id!==id));
+  render();
+}
+
+function resetHub(){
+  if(!confirm("Alles zurücksetzen?")) return;
+  localStorage.removeItem(KEY);
+  localStorage.removeItem(GROUPS_KEY);
+  initDefaults();
+  render();
+}
+
+function checkLogin(){
+  document.getElementById("status").innerText =
+    "Login Status: vermutlich eingeloggt";
+}
+
+/* BOOT */
+initDefaults();
+render();
+checkLogin();
+</script>
+
+</body>
+</html>

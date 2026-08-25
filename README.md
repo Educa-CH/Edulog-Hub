@@ -14,7 +14,7 @@ Alles wird automatisch im Browser gespeichert. Es braucht kein Login und keine I
 
 ## Wie verwendet man es?
 
-Lade die Datei herunter, speichere sie bspw. auf dem Desktop und öffne die Datei im Browser.
+Lade die Datei "edulog-Hub.html" herunter, speichere sie bspw. auf dem Desktop und öffne die Datei im Browser.
 
 Oben findest du drei Knöpfe:
 

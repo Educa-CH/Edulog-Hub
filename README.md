@@ -29,8 +29,7 @@ Wenn du eine Kachel verschieben willst, ziehe sie mit der Maus in die gewünscht
 Beim ersten Start sind bereits einige Gruppen und Beispiel-Kacheln vorhanden, damit du direkt loslegen kannst.
 Du kannst diese im Hub selbst jederzeit ändern oder löschen.
 
-Wenn du die Startwerte anpassen möchtest (zum Beispiel für eine Schule oder Organisation), kannst du das direkt im Code tun.
-Dort sind die Standard-Gruppen und Kacheln definiert:
+Wenn du die Startwerte anpassen möchtest (zum Beispiel für eine Schule oder Organisation), kannst du das direkt im Code tun. Öffne die Datei dazu in einem Text-Editor und navigiere zu folgender Stelle. Hier sind die Standard-Gruppen und Kacheln definiert:
 
 <pre>
 /* DEFAULT CONFIG */

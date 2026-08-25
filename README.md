@@ -20,7 +20,7 @@ Oben findest du drei Knöpfe:
 
 + Gruppe erstellt eine neue Kategorie
 + Kachel fügt einen neuen Link hinzu
-Reset setzt alles zurück
++ Reset setzt alles zurück
 
 Wenn du eine Kachel verschieben willst, ziehe sie mit der Maus in die gewünschte Gruppe.
 

@@ -2,355 +2,537 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>edulog hub</title>
 
-<link rel="icon" type="image/x-icon" href="https://edulog.ch/favicon.ico">
+<link rel="icon" href="https://edulog.ch/favicon.ico">
 
 <style>
-body {
-  font-family: "Segoe UI", Arial;
-  background: #f4f6f8;
-  margin: 0;
-  padding: 30px;
+body{
+    font-family:"Segoe UI",Arial,sans-serif;
+    background:#f4f6f8;
+    margin:0;
+    padding:30px;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+header h2{
+    margin:0;
+    color:#002654;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
 
-header h2 {
-  color: #002654;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 750;
-  letter-spacing: 0.3px;
+.toolbar{
+    margin:20px 0;
+    display:flex;
+    gap:10px;
 }
 
-#status {
-  font-size: 14px;
-  color: #555;
+button{
+    border:none;
+    border-radius:8px;
+    padding:8px 12px;
+    cursor:pointer;
+    background:#e9eef5;
 }
 
-.toolbar {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0;
+button:hover{
+    background:#dbe6f5;
 }
 
-button {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: none;
-  background: #e9eef5;
-  cursor: pointer;
+.group{
+    margin-bottom:30px;
 }
 
-button:hover {
-  background: #dbe6f5;
+.group-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
 }
 
-/* GROUPS */
-.group {
-  margin-bottom: 30px;
+.group-box{
+    min-height:140px;
+    padding:15px;
+    border-radius:14px;
+    background:white;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
-.group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #444;
+.group-box.dragover{
+    outline:2px dashed #002654;
 }
 
-.group-header button {
-  background: transparent;
-  color: #999;
-  font-size: 12px;
+.tile{
+    width:140px;
+    height:120px;
+    border-radius:12px;
+    background:white;
+    display:inline-flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin:10px;
+    position:relative;
+    cursor:grab;
+    box-shadow:0 3px 8px rgba(0,0,0,.08);
 }
 
-.group-header button:hover {
-  color: red;
+.tile:hover{
+    transform:translateY(-2px);
 }
 
-.group-box {
-  background: white;
-  border-radius: 14px;
-  padding: 15px;
-  min-height: 160px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.icon{
+    width:32px;
+    height:32px;
+    margin-bottom:8px;
 }
 
-.group-box.dragover {
-  outline: 2px dashed #002654;
+.delete,
+.edit{
+    position:absolute;
+    top:5px;
+    font-size:12px;
+    cursor:pointer;
 }
 
-/* TILE */
-.tile {
-  width: 140px;
-  height: 120px;
-  background: #fff;
-  border-radius: 12px;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 10px;
-  cursor: grab;
-  position: relative;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-  font-size: 13px;
+.delete{
+    right:6px;
 }
 
-.tile:hover {
-  transform: translateY(-2px);
+.edit{
+    left:6px;
 }
 
-.icon {
-  width: 32px;
-  height: 32px;
-  margin-bottom: 6px;
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    justify-content:center;
+    align-items:center;
 }
 
-.delete {
-  position: absolute;
-  top: 5px;
-  right: 8px;
-  font-size: 12px;
-  cursor: pointer;
-  color: #999;
+.modal-content{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    width:450px;
+    max-width:90%;
 }
 
-.delete:hover {
-  color: red;
+.modal-content h3{
+    margin-top:0;
+}
+
+.modal-content label{
+    display:block;
+    margin-top:12px;
+    margin-bottom:4px;
+    font-weight:600;
+}
+
+.modal-content input,
+.modal-content select{
+    width:100%;
+    box-sizing:border-box;
+    padding:8px;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:15px;
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h2>
-    <img src="https://edulog.ch/favicon.ico" style="width:26px;height:26px;">
-    edulog hub
-  </h2>
-  <div id="status">Login Status: geprüft</div>
+    <h2>
+        <img src="https://edulog.ch/favicon.ico" width="26" height="26">
+        edulog hub
+    </h2>
 </header>
 
 <div class="toolbar">
-  <button onclick="addGroup()">+ Gruppe</button>
-  <button onclick="addTile()">+ Kachel</button>
-  <button onclick="resetHub()">↺ Reset</button>
+    <button onclick="addGroup()">+ Gruppe</button>
+    <button onclick="openTileForm()">+ Kachel</button>
+    <button onclick="resetHub()">↺ Reset</button>
 </div>
 
 <div id="app"></div>
 
+<div id="tileModal" class="modal">
+    <div class="modal-content">
+
+        <h3 id="formTitle">Neue Kachel</h3>
+
+        <input type="hidden" id="tileId">
+
+        <label>Name</label>
+        <input id="tileName">
+
+        <label>Dienst-URL (für Favicon)</label>
+        <input id="tileUrl">
+
+        <label>edulog Login-URL</label>
+        <input id="tileLoginUrl">
+
+        <label>Gruppe</label>
+        <select id="tileGroup"></select>
+
+        <div class="modal-actions">
+            <button onclick="closeTileForm()">Abbrechen</button>
+            <button onclick="saveTileForm()">Speichern</button>
+        </div>
+
+    </div>
+</div>
+
 <script>
-const KEY = "tiles";
-const GROUPS_KEY = "groups";
 
-/* DEFAULT CONFIG */
-const DEFAULT_GROUPS = ["Schule","Microsoft","Admin","Tools"];
+const KEY="tiles";
+const GROUPS_KEY="groups";
 
-const DEFAULT_TILES = [
-  { id:"1", name:"Outlook", url:"https://outlook.office.com", group:"Microsoft" },
-  { id:"2", name:"Teams", url:"https://teams.microsoft.com", group:"Microsoft" },
-  { id:"3", name:"Edulog Lehrmittel", url:"https://digital.lmvz.ch", group:"Schule" }
+const DEFAULT_GROUPS=[
+    "Schule",
+    "Microsoft",
+    "Admin",
+    "Tools"
 ];
 
-/* STORAGE */
-function loadTiles(){ return JSON.parse(localStorage.getItem(KEY) || "[]"); }
-function saveTiles(t){ localStorage.setItem(KEY, JSON.stringify(t)); }
+const DEFAULT_TILES=[
+{
+    id:"1",
+    name:"Outlook",
+    url:"https://outlook.office.com",
+    loginUrl:"https://outlook.office.com",
+    group:"Microsoft"
+},
+{
+    id:"2",
+    name:"Teams",
+    url:"https://teams.microsoft.com",
+    loginUrl:"https://teams.microsoft.com",
+    group:"Microsoft"
+},
+{
+    id:"3",
+    name:"Klett",
+    url:"https://www.klett.de/willkommen/",
+    loginUrl:"https://onboarding.klett.ch/auth/edulog/start",
+    group:"Schule"
+},
+{
+    id:"4",
+    name:"LMVZ",
+    url:"https://digital.lmvz.ch/lehrmittel/welcome",
+    loginUrl:"https://digital.lmvz.ch/auth/realms/lmv/broker/edulog/login?client_id=ulm-frontend&tab_id=2LogdEpvhnA&client_data=eyJydSI6Imh0dHBzOi8vZGlnaXRhbC5sbXZ6LmNoL2xlaHJtaXR0ZWwvcHVibGljL2FmdGVybG9naW4iLCJydCI6ImNvZGUiLCJybSI6ImZyYWdtZW50Iiwic3QiOiIwZmJmNDk2OS1kNDM1LTRkYjctOTgwMC0yZWMyNDgyZmRhMTEifQ&session_code=pKby99JzIq7dkMmkQQokgzYnqaZrZLzLEzazE64qlr0",
+    group:"Schule"
+}
+];
 
-function loadGroups(){ return JSON.parse(localStorage.getItem(GROUPS_KEY) || "[]"); }
-function saveGroups(g){ localStorage.setItem(GROUPS_KEY, JSON.stringify(g)); }
+function loadTiles(){
+    return JSON.parse(localStorage.getItem(KEY)||"[]");
+}
 
-/* INIT */
+function saveTiles(t){
+    localStorage.setItem(KEY,JSON.stringify(t));
+}
+
+function loadGroups(){
+    return JSON.parse(localStorage.getItem(GROUPS_KEY)||"[]");
+}
+
+function saveGroups(g){
+    localStorage.setItem(GROUPS_KEY,JSON.stringify(g));
+}
+
 function initDefaults(){
-  if(!localStorage.getItem(GROUPS_KEY)) saveGroups(DEFAULT_GROUPS);
-  if(!localStorage.getItem(KEY)) saveTiles(DEFAULT_TILES);
+
+    if(!localStorage.getItem(KEY))
+        saveTiles(DEFAULT_TILES);
+
+    if(!localStorage.getItem(GROUPS_KEY))
+        saveGroups(DEFAULT_GROUPS);
 }
 
-/* FAVICON */
-function favicon(url){
-  try{
-    const u = new URL(url);
-    return [
-      `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`,
-      `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
-      `${u.origin}/favicon.ico`
-    ];
-  }catch{
-    return ["https://via.placeholder.com/32"];
-  }
-}
+function migrateTiles(){
 
-/* RENDER */
-function render(){
-  const app = document.getElementById("app");
-  app.innerHTML = "";
+    const tiles=loadTiles();
+    let changed=false;
 
-  const groups = loadGroups();
-  const tiles = loadTiles();
+    tiles.forEach(t=>{
 
-  groups.forEach(group=>{
-    const section = document.createElement("div");
-    section.className="group";
+        if(!t.loginUrl){
+            t.loginUrl=t.url;
+            changed=true;
+        }
 
-    const header = document.createElement("div");
-    header.className="group-header";
+    });
 
-    const title = document.createElement("div");
-    title.innerText = group;
-
-    const del = document.createElement("button");
-    del.innerText = "🗑";
-    del.onclick = ()=> deleteGroup(group);
-
-    header.appendChild(title);
-    header.appendChild(del);
-
-    const box = document.createElement("div");
-    box.className="group-box";
-
-    box.ondragover = e=>{
-      e.preventDefault();
-      box.classList.add("dragover");
-    };
-
-    box.ondragleave = ()=> box.classList.remove("dragover");
-
-    box.ondrop = e=>{
-      const id = e.dataTransfer.getData("id");
-      moveTile(id, group);
-      box.classList.remove("dragover");
-    };
-
-    tiles.filter(t=>t.group===group)
-         .forEach(t=>box.appendChild(createTile(t)));
-
-    section.appendChild(header);
-    section.appendChild(box);
-    app.appendChild(section);
-  });
-}
-
-/* TILE */
-function createTile(t){
-  const div=document.createElement("div");
-  div.className="tile";
-  div.draggable=true;
-
-  const img=document.createElement("img");
-  img.className="icon";
-
-  const sources=favicon(t.url);
-  let i=0;
-  img.src=sources[i];
-  img.onerror=()=>{ if(++i<sources.length) img.src=sources[i]; };
-
-  const del=document.createElement("div");
-  del.className="delete";
-  del.innerText="🗑";
-  del.onclick=e=>{
-    e.stopPropagation();
-    removeTile(t.id);
-  };
-
-  div.appendChild(del);
-  div.appendChild(img);
-  div.appendChild(document.createTextNode(t.name));
-
-  div.onclick=()=>window.location.href=t.url;
-
-  div.ondragstart=e=>{
-    e.dataTransfer.setData("id",t.id);
-  };
-
-  return div;
-}
-
-/* ACTIONS FIXED */
-
-/* 🔥 FIX: robust group deletion */
-function deleteGroup(group){
-  if(!confirm(`Gruppe "${group}" löschen?`)) return;
-
-  const groups = loadGroups().filter(g=>g!==group);
-  saveGroups(groups);
-
-  const fallback = DEFAULT_GROUPS[0] || "Unassigned";
-
-  const tiles = loadTiles().map(t=>{
-    if(t.group===group){
-      return {...t, group:fallback};
+    if(changed){
+        saveTiles(tiles);
     }
-    return t;
-  });
-
-  saveTiles(tiles);
-  render();
 }
 
-/* other actions */
+function favicon(url){
+
+    try{
+
+        const u=new URL(url);
+
+        return [
+            `https://www.google.com/s2/favicons?sz=64&domain=${u.hostname}`,
+            `https://icons.duckduckgo.com/ip3/${u.hostname}.ico`,
+            `${u.origin}/favicon.ico`
+        ];
+
+    }catch{
+
+        return ["https://via.placeholder.com/32"];
+
+    }
+}
+
+function render(){
+
+    const app=document.getElementById("app");
+    app.innerHTML="";
+
+    const groups=loadGroups();
+    const tiles=loadTiles();
+
+    groups.forEach(group=>{
+
+        const section=document.createElement("div");
+        section.className="group";
+
+        const header=document.createElement("div");
+        header.className="group-header";
+
+        header.innerHTML=`
+            <strong>${group}</strong>
+            <button onclick="deleteGroup('${group}')">🗑</button>
+        `;
+
+        const box=document.createElement("div");
+        box.className="group-box";
+
+        box.ondragover=e=>{
+            e.preventDefault();
+            box.classList.add("dragover");
+        };
+
+        box.ondragleave=()=>{
+            box.classList.remove("dragover");
+        };
+
+        box.ondrop=e=>{
+            const id=e.dataTransfer.getData("id");
+            moveTile(id,group);
+            box.classList.remove("dragover");
+        };
+
+        tiles
+        .filter(t=>t.group===group)
+        .forEach(t=>box.appendChild(createTile(t)));
+
+        section.appendChild(header);
+        section.appendChild(box);
+
+        app.appendChild(section);
+    });
+}
+
+function createTile(t){
+
+    const tile=document.createElement("div");
+    tile.className="tile";
+    tile.draggable=true;
+
+    const img=document.createElement("img");
+    img.className="icon";
+
+    const sources=favicon(t.url);
+
+    let i=0;
+    img.src=sources[i];
+
+    img.onerror=()=>{
+        i++;
+        if(i<sources.length){
+            img.src=sources[i];
+        }
+    };
+
+    const del=document.createElement("div");
+    del.className="delete";
+    del.innerHTML="🗑";
+
+    del.onclick=e=>{
+        e.stopPropagation();
+        removeTile(t.id);
+    };
+
+    const edit=document.createElement("div");
+    edit.className="edit";
+    edit.innerHTML="✏️";
+
+    edit.onclick=e=>{
+        e.stopPropagation();
+        openTileForm(t);
+    };
+
+    tile.appendChild(edit);
+    tile.appendChild(del);
+    tile.appendChild(img);
+    tile.appendChild(document.createTextNode(t.name));
+
+    tile.onclick=()=>{
+		window.open(
+			t.loginUrl || t.url,
+			"_blank",
+			"noopener,noreferrer"
+		);
+	};
+
+    tile.ondragstart=e=>{
+        e.dataTransfer.setData("id",t.id);
+    };
+
+    return tile;
+}
+
+function openTileForm(tile=null){
+
+    const select=document.getElementById("tileGroup");
+
+    select.innerHTML="";
+
+    loadGroups().forEach(g=>{
+
+        const option=document.createElement("option");
+        option.value=g;
+        option.textContent=g;
+
+        select.appendChild(option);
+    });
+
+    document.getElementById("tileId").value=tile?.id||"";
+    document.getElementById("tileName").value=tile?.name||"";
+    document.getElementById("tileUrl").value=tile?.url||"";
+    document.getElementById("tileLoginUrl").value=tile?.loginUrl||"";
+    document.getElementById("tileGroup").value=tile?.group||loadGroups()[0];
+
+    document.getElementById("formTitle").textContent=
+        tile ? "Kachel bearbeiten" : "Neue Kachel";
+
+    document.getElementById("tileModal").style.display="flex";
+}
+
+function closeTileForm(){
+    document.getElementById("tileModal").style.display="none";
+}
+
+function saveTileForm(){
+
+    const id=document.getElementById("tileId").value;
+
+    const tile={
+        id:id||Date.now().toString(),
+        name:document.getElementById("tileName").value,
+        url:document.getElementById("tileUrl").value,
+        loginUrl:document.getElementById("tileLoginUrl").value,
+        group:document.getElementById("tileGroup").value
+    };
+
+    let tiles=loadTiles();
+
+    if(id){
+        tiles=tiles.map(t=>t.id===id?tile:t);
+    }else{
+        tiles.push(tile);
+    }
+
+    saveTiles(tiles);
+
+    closeTileForm();
+    render();
+}
+
 function addGroup(){
-  const name=prompt("Gruppenname:");
-  if(!name) return;
-  const g=loadGroups(); g.push(name); saveGroups(g); render();
+
+    const name=prompt("Gruppenname");
+
+    if(!name) return;
+
+    const groups=loadGroups();
+
+    groups.push(name);
+
+    saveGroups(groups);
+    render();
 }
 
-function addTile(){
-  const name=prompt("Name:");
-  const url=prompt("URL:");
-  const groups=loadGroups();
-  const group=prompt("Gruppe:",groups[0]);
+function deleteGroup(group){
 
-  const tiles=loadTiles();
-  tiles.push({
-    id:Date.now().toString(),
-    name,url,
-    group:group||groups[0]
-  });
+    if(!confirm(`Gruppe "${group}" löschen?`))
+        return;
 
-  saveTiles(tiles);
-  render();
+    saveGroups(
+        loadGroups().filter(g=>g!==group)
+    );
+
+    render();
 }
 
 function moveTile(id,group){
-  const tiles=loadTiles();
-  const t=tiles.find(x=>x.id===id);
-  if(!t) return;
-  t.group=group;
-  saveTiles(tiles);
-  render();
+
+    const tiles=loadTiles();
+
+    const tile=tiles.find(t=>t.id===id);
+
+    if(!tile) return;
+
+    tile.group=group;
+
+    saveTiles(tiles);
+
+    render();
 }
 
 function removeTile(id){
-  saveTiles(loadTiles().filter(t=>t.id!==id));
-  render();
+
+    if(!confirm("Kachel löschen?"))
+        return;
+
+    saveTiles(
+        loadTiles().filter(t=>t.id!==id)
+    );
+
+    render();
 }
 
 function resetHub(){
-  if(!confirm("Alles zurücksetzen?")) return;
-  localStorage.removeItem(KEY);
-  localStorage.removeItem(GROUPS_KEY);
-  initDefaults();
-  render();
+
+    if(!confirm("Alles zurücksetzen?"))
+        return;
+
+    localStorage.removeItem(KEY);
+    localStorage.removeItem(GROUPS_KEY);
+
+    initDefaults();
+    render();
 }
 
-function checkLogin(){
-  document.getElementById("status").innerText =
-    "Login Status: vermutlich eingeloggt";
-}
-
-/* BOOT */
 initDefaults();
+migrateTiles();
 render();
-checkLogin();
+
 </script>
 
 </body>
